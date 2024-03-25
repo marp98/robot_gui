@@ -1,11 +1,12 @@
 #include "robot_gui/robot_gui.h"
-#include <algorithm>
 
 RobotGUI::RobotGUI() {
   ros::NodeHandle nh;
   topic_name = "robot_info";
   sub_ = nh.subscribe<robotinfo_msgs::RobotInfo10Fields>(topic_name, 2,
                                          &RobotGUI::infoCallback, this);
+  twist_topic_name = "cmd_vel";
+  twist_pub_ = nh.advertise<geometry_msgs::Twist>(twist_topic_name, 10);
 }
 
 void RobotGUI::infoCallback(const robotinfo_msgs::RobotInfo10Fields::ConstPtr &msg)
@@ -24,6 +25,8 @@ void RobotGUI::infoCallback(const robotinfo_msgs::RobotInfo10Fields::ConstPtr &m
     ROS_DEBUG("  data_field_09: %s", msg->data_field_09.c_str());
     ROS_DEBUG("  data_field_10: %s", msg->data_field_10.c_str());
 }
+
+
 
 void RobotGUI::run() {
   cv::Mat frame = cv::Mat(600, 450, CV_8UC3);
@@ -44,6 +47,35 @@ void RobotGUI::run() {
     cvui::printf(frame, 15, 145, 0.4, 0xffffff, robot_data.data_field_06.c_str());
     cvui::printf(frame, 15, 165, 0.4, 0xffffff, robot_data.data_field_07.c_str());
     cvui::printf(frame, 15, 185, 0.4, 0xffffff, robot_data.data_field_08.c_str());
+
+    int button_y = 220;
+    if (cvui::button(frame, 160, button_y, 130, 60, " Forward ")) {
+        twist_msg.linear.x = twist_msg.linear.x + linear_velocity_step;
+        twist_pub_.publish(twist_msg);
+    }
+
+    button_y += 65; 
+    if (cvui::button(frame, 25, button_y, 130, 60, " Left ")) {
+        twist_msg.angular.z = twist_msg.angular.z + angular_velocity_step;
+        twist_pub_.publish(twist_msg);
+    }
+
+    if (cvui::button(frame, 160, button_y, 130, 60, "   Stop  ")) {
+        twist_msg.linear.x = 0.0;
+        twist_msg.angular.z = 0.0;
+        twist_pub_.publish(twist_msg);
+    }
+
+    if (cvui::button(frame, 295, button_y, 130, 60, " Right ")) {
+        twist_msg.angular.z = twist_msg.angular.z - angular_velocity_step;
+        twist_pub_.publish(twist_msg);
+    }
+
+    button_y += 65; 
+    if (cvui::button(frame, 160, button_y, 130, 60, "Backward")) {
+        twist_msg.linear.x = twist_msg.linear.x - linear_velocity_step;
+        twist_pub_.publish(twist_msg);
+    }
 
     cvui::update();
 
