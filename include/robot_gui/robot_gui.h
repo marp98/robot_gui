@@ -5,6 +5,7 @@
 #include <robotinfo_msgs/RobotInfo10Fields.h>
 #include <geometry_msgs/Twist.h>
 #include "nav_msgs/Odometry.h"
+#include <std_srvs/Trigger.h>
 #include <opencv2/opencv.hpp>
 #include <ros/ros.h>
 
@@ -27,5 +28,10 @@ class RobotGUI {
         nav_msgs::Odometry odom_data;
         std::string odom_topic_name;
         void odomCallback(const nav_msgs::Odometry::ConstPtr &msg);
+        ros::ServiceClient service_client;
+        std_srvs::Trigger srv_req;
+        std::string service_name;
+        std::string last_service_call_msg;
+        int service_call_counter = 0;
         const std::string WINDOW_NAME = "ROBOT GUI";
 };

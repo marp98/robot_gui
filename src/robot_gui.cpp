@@ -11,6 +11,9 @@ RobotGUI::RobotGUI() {
   odom_topic_name = "odom";
   odom_sub_ = nh.subscribe<nav_msgs::Odometry>(odom_topic_name, 2,
                                                &RobotGUI::odomCallback, this);
+
+  service_client = nh.serviceClient<std_srvs::Trigger>("get_distance");
+  service_name = "get_distance";
 }
 
 void RobotGUI::infoCallback(
@@ -37,7 +40,7 @@ void RobotGUI::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
 }
 
 void RobotGUI::run() {
-  cv::Mat frame = cv::Mat(600, 450, CV_8UC3);
+  cv::Mat frame = cv::Mat(750, 450, CV_8UC3);
 
   cv::namedWindow(WINDOW_NAME);
   cvui::init(WINDOW_NAME);
@@ -115,6 +118,26 @@ void RobotGUI::run() {
     cvui::window(frame, 295, 495, 130, 90, "Z");
     cvui::printf(frame, 295, 520, 0.4, 0xffffff, "%.02f",
                  odom_data.pose.pose.position.z);
+
+    cvui::text(frame, 10, 605, "Distance travelled");
+
+    if (cvui::button(frame, 10, 625, 100, 100, "Get distance")) {
+      if (service_client.call(srv_req)) {
+        ROS_DEBUG("Response message: %s", srv_req.response.message.c_str());
+        last_service_call_msg = srv_req.response.message;
+        service_call_counter++;
+      } else {
+        last_service_call_msg = "Service call failed.";
+        service_call_counter = 0;
+      }
+    }
+
+    cvui::window(frame, 120, 625, 320, 100, "Distance in meters:");
+
+    if (not last_service_call_msg.empty()) {
+      cvui::printf(frame, 120, 650, 0.4, 0xffffff, "%s",
+                   last_service_call_msg.c_str());
+    }    
 
     cvui::update();
 
