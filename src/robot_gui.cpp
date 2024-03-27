@@ -45,6 +45,8 @@ void RobotGUI::run() {
   cv::namedWindow(WINDOW_NAME);
   cvui::init(WINDOW_NAME);
 
+  ros::Rate loop_rate(10);
+
   while (ros::ok()) {
     frame = cv::Scalar(49, 52, 49);
 
@@ -69,32 +71,29 @@ void RobotGUI::run() {
 
     int button_y = 220;
     if (cvui::button(frame, 160, button_y, 130, 60, " Forward ")) {
-      twist_msg.linear.x = twist_msg.linear.x + linear_velocity_step;
-      twist_pub_.publish(twist_msg);
+      twist_msg.linear.x += linear_velocity_step;
     }
 
     button_y += 65;
     if (cvui::button(frame, 25, button_y, 130, 60, " Left ")) {
-      twist_msg.angular.z = twist_msg.angular.z + angular_velocity_step;
-      twist_pub_.publish(twist_msg);
+      twist_msg.angular.z += angular_velocity_step;
     }
 
     if (cvui::button(frame, 160, button_y, 130, 60, "   Stop  ")) {
       twist_msg.linear.x = 0.0;
       twist_msg.angular.z = 0.0;
-      twist_pub_.publish(twist_msg);
     }
 
     if (cvui::button(frame, 295, button_y, 130, 60, " Right ")) {
-      twist_msg.angular.z = twist_msg.angular.z - angular_velocity_step;
-      twist_pub_.publish(twist_msg);
+      twist_msg.angular.z -= angular_velocity_step;
     }
 
     button_y += 65;
     if (cvui::button(frame, 160, button_y, 130, 60, "Backward")) {
-      twist_msg.linear.x = twist_msg.linear.x - linear_velocity_step;
-      twist_pub_.publish(twist_msg);
+      twist_msg.linear.x -= linear_velocity_step;
     }
+
+    twist_pub_.publish(twist_msg);
 
     int velocity_y = 420;
     cvui::window(frame, 10, velocity_y, 210, 40, "Linear velocity:");
@@ -147,5 +146,6 @@ void RobotGUI::run() {
       break;
     }
     ros::spinOnce();
+    loop_rate.sleep();
   }
 }
